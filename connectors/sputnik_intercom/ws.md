@@ -18,7 +18,7 @@ Websocket коннектор представляет собой real-time commu
 - Yandex Speech Kit
 - AWS S3
 
-## Метрики:
+## Метрики
 
 Метрики доступны по пути ```/metrics```
 
