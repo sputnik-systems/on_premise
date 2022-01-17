@@ -10,6 +10,6 @@
 
 ### Домофон Спутник
 
-| [CS](./connectors/sputnik_intercom/cs.md) | WS | [FS](./connectors/sputnik_intercom/fs.md) |
+| [CS](./connectors/sputnik_intercom/cs.md) | [WS](./connectors/sputnik_intercom/ws.md) | [FS](./connectors/sputnik_intercom/fs.md) |
 |:--|:--|:--|
 
