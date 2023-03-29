@@ -1,0 +1,4 @@
+rabbitmqctl add_user username_to_sputnik password_to_sputnik
+rabbitmqctl set_permissions -p / username_to_sputnik ".*" ".*" ".*"
+rabbitmqctl set_parameter federation-upstream sputnik_federation_upstream '{"uri":"amqp://login_from_sputnik:password_from_sputnik@rmq_host_from_sputnik","expires":3600000}'
+rabbitmqctl set_policy --apply-to exchanges user-policy "(^sputnik$)" '{"federation-upstream-set":"all"}'

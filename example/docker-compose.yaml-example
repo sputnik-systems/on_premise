@@ -1,0 +1,119 @@
+version: "3"
+services:
+  rtc:
+    image: sputnik_repo_rtc
+    env_file:
+    - .env
+    environment:
+      - MQ_HOST=rabbit
+      - MQ_USER=${RABBITMQ_USERNAME}
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RTC_IP_ADDRESS=rtc_ip # curl ident.me
+#    ports:
+#      - "8080:8080" # Metric
+#      - "8010:8010" # API
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    healthcheck:
+      test: curl --fail http://localhost:8010/liveness || exit 1
+      interval: 10s
+      timeout: 10s
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+  rabbit:
+    env_file:
+    - .env
+    build: RabbitMQ/.
+    container_name: 'rabbit'
+    hostname: rabbit
+    command: bash -c "chmod +x /usr/local/bin/setup.sh && /usr/local/bin/setup.sh"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+        - rabbitdata:/var/lib/rabbitmq/
+        - rabbitlog:/var/log/rabbitmq
+        - rabbitmq:/usr/local/
+        - ./RabbitMQ/setup.sh:/usr/local/bin/setup.sh
+    ports:
+      - 5672:5672
+#      - 15672:15672
+    healthcheck:
+      test: "rabbitmqctl status | grep 'port: 5672' || exit 1"
+      interval: 5s
+      timeout: 30s
+
+  haproxy:
+    image: "haproxy:2.7-alpine"
+    ports:
+      - 80:80
+      - 81:81
+      - 82:82
+      - 83:83
+      - 84:84
+      - 8404:8404
+    volumes:
+      - ./HAProxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    command: --rolling-restart --cleanup --label-enable --debug --schedule "0 0 */1 * * *"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./Grafana/datasource_prometheus.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./Grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/all.yaml
+      - ./Grafana/custom.ini:/etc/grafana/custom.ini
+      - ./Grafana/RTC-dashboard.json:/var/lib/grafana/dashboards/RTC-dashboard.json
+    environment:
+      - GF_PATHS_CONFIG=/etc/grafana/custom.ini
+
+  prometheus:
+    image: 'prom/prometheus'
+    volumes:
+      - ./Prometheus/scrape_configs.yml:/etc/prometheus/prometheus.yml
+      - prom_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    healthcheck:
+      test: "prometheus --version"
+      interval: 5s
+      timeout: 5s
+
+  haproxy-exporter:
+    image: 'quay.io/prometheus/haproxy-exporter:latest'
+    command:
+      - '--haproxy.scrape-uri=http://haproxy:8404/stats;csv'
+    ports:
+      - '9101:9101'
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+volumes:
+  prom_data:
+  rabbitdata:
+  rabbitlog:
+  rabbitmq:
