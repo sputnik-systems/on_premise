@@ -28,7 +28,6 @@ services:
     build: RabbitMQ/.
     container_name: 'rabbit'
     hostname: rabbit
-    command: bash -c "chmod +x /usr/local/bin/setup.sh && /usr/local/bin/setup.sh"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -37,7 +36,6 @@ services:
         - rabbitdata:/var/lib/rabbitmq/
         - rabbitlog:/var/log/rabbitmq
         - rabbitmq:/usr/local/
-        - ./RabbitMQ/setup.sh:/usr/local/bin/setup.sh
     ports:
       - 5672:5672
 #      - 15672:15672

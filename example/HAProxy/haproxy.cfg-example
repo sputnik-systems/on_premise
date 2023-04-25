@@ -1,9 +1,15 @@
 ###############################################################
 # Proxy for Sputnik #
 #################################
+global
+  h1-case-adjust content-length Content-Length
+
 defaults
+        mode http
         log global
+        fullconn 16000
         option httplog
+        timeout server 60s
         log stdout format raw local0
 
 resolvers google-dns
@@ -11,61 +17,44 @@ resolvers google-dns
    nameserver ns2 8.8.4.4:53
 
 listen rtc
-        mode http
         bind *:80
         use_backend rtc-backend
         maxconn 40000
 
 listen fs-sputnik
-        mode http
         bind *:81
         use_backend fs-sputnik-backend
 
 listen cs-sputnik
-        mode http
         bind *:82
         use_backend cs-sputnik-backend
 
 listen api-sputnik
-        mode http
         bind *:83
         use_backend api-sputnik-backend
 
 backend rtc-backend
-        mode http
         fullconn 40000
-        timeout server 60s
         timeout queue 10000
         server rtc-backend rtc:8010
 
 backend fs-sputnik-backend
-        mode http
-        fullconn 16000
-        timeout server 60s
         http-request set-header X-Client-IP %[src]
         http-request set-header Host fs.partner.example
         server fs-sputnik-backend fs-sputnik.example:443 resolvers google-dns check verify none
 
 backend cs-sputnik-backend
-        mode http
-        fullconn 16000
-        timeout server 60s
         http-request set-header X-Client-IP %[src]
         http-request set-header Host cs.partner.example
         server cs-sputnik-backend cs-sputnik.example:443 resolvers google-dns check verify none
 
 backend api-sputnik-backend
-        mode http
-        fullconn 16000
-        timeout server 60s
         http-request set-header X-Client-IP %[src]
         http-request set-header Host api.partner.example
         server api-sputnik-backend api-sputnik.example:443 resolvers google-dns check ssl verify none
 
 backend rmq-sputnik-backend
-        mode tcp
         fullconn 40000
-        timeout server 60s
         timeout queue 10000
         http-request set-header X-Client-IP %[src]
         http-request set-header Host mq.partner.example

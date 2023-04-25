@@ -17,6 +17,13 @@
 - http:// адрес HAProxy :82 - CS
 - http:// адрес HAProxy :83 - API
 
+Для проверки, можно запустить скрипт:
+```
+ [ $(curl -s localhost:80/liveness -w "%{http_code}" -o /dev/null) == "200" ] && echo RTC Ok || echo RTC not Ok
+ [ $(curl -s localhost:81 -w "%{http_code}" -o /dev/null) == "403" ] && echo FS Ok  || echo FS not Ok
+ [ $(curl -s localhost:82 -w "%{http_code}" -o /dev/null) == "404" ] && echo CS Ok  || echo CS not Ok
+ [ $(curl -s localhost:83 -w "%{http_code}" -o /dev/null) == "200" ] && echo API Ok || echo API not Ok
+```
 ## Docker compose file:
 Все значения для настройки передаются в файле .env, но если необходимо, можно запустить контейнер с другими настройками, указав их в секции environment
 ```
