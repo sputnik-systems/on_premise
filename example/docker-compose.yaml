@@ -1,23 +1,21 @@
 version: "3"
 services:
   rtc:
-    image: sputnik_repo_rtc
+    image: DOCKER_REGISTRY_RTC_REPO
     env_file:
     - .env
     environment:
       - MQ_HOST=rabbit
-      - MQ_USER=${RABBITMQ_USERNAME}
-      - MQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - RTC_IP_ADDRESS=rtc_ip # curl ident.me
-#    ports:
-#      - "8080:8080" # Metric
-#      - "8010:8010" # API
+      - MQ_USER=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - RTC_IP_ADDRESS=${RTC_IP_ADDRESS}
+    network_mode: host
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-    healthcheck:
-      test: curl --fail http://localhost:8010/liveness || exit 1
-      interval: 10s
-      timeout: 10s
+    # healthcheck:
+    #   test: curl --fail http://localhost:8010/liveness || exit 1
+    #   interval: 10s
+    #   timeout: 10s
     depends_on:
       rabbit:
         condition: service_healthy
@@ -26,19 +24,17 @@ services:
     env_file:
     - .env
     build: RabbitMQ/.
-    container_name: 'rabbit'
-    hostname: rabbit
+    container_name: rabbitmq
+    hostname: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${MQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: /
     volumes:
         - rabbitdata:/var/lib/rabbitmq/
         - rabbitlog:/var/log/rabbitmq
-        - rabbitmq:/usr/local/
     ports:
       - 5672:5672
-#      - 15672:15672
     healthcheck:
       test: "rabbitmqctl status | grep 'port: 5672' || exit 1"
       interval: 5s
@@ -114,4 +110,3 @@ volumes:
   prom_data:
   rabbitdata:
   rabbitlog:
-  rabbitmq:
