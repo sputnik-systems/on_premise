@@ -5,22 +5,24 @@ services:
     env_file:
     - .env
     environment:
-      - MQ_HOST=rabbit
+      - MQ_HOST=localhost
       - MQ_USER=${MQ_USERNAME}
       - MQ_PASSWORD=${MQ_PASSWORD}
       - RTC_IP_ADDRESS=${RTC_IP_ADDRESS}
     network_mode: host
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-    # healthcheck:
-    #   test: curl --fail http://localhost:8010/liveness || exit 1
-    #   interval: 10s
-    #   timeout: 10s
+    healthcheck:
+      test: curl --fail http://localhost:8010/liveness || exit 1
+      interval: 10s
+      timeout: 10s
     depends_on:
-      rabbit:
+      rabbitmq:
         condition: service_healthy
+      haproxy:
+        condition: service_started
 
-  rabbit:
+  rabbitmq:
     env_file:
     - .env
     build: RabbitMQ/.
@@ -41,14 +43,8 @@ services:
       timeout: 30s
 
   haproxy:
-    image: "haproxy:2.7-alpine"
-    ports:
-      - 80:80
-      - 81:81
-      - 82:82
-      - 83:83
-      - 84:84
-      - 8404:8404
+    build: HAProxy/.
+    network_mode: host
     volumes:
       - ./HAProxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
 
