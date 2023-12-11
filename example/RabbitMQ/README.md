@@ -4,7 +4,7 @@
 ```
 docker-compose exec rabbit rabbitmqctl add_user username password
 docker-compose exec rabbit rabbitmqctl set_permissions -p / username ".*" ".*" ".*"
-docker-compose exec rabbit rabbitmqctl set_parameter federation-upstream staging-asgard '{"uri":"amqp://$SPUTNIK_RMQ_LOGIN:$SPUTNIK_RMQ_PASS@$SPUTNIK_RMQ_HOST:$
+docker-compose exec rabbit rabbitmqctl set_parameter federation-upstream spuntik "{\"uri\":\"$MQ_FEDERATION_UPSTREAM_URI\",\"expires\":3600000}"
 docker-compose exec rabbit rabbitmqctl set_policy --apply-to exchanges user-policy "(^sputnik$)" '{"federation-upstream-set":"all"}'
 ```
 
