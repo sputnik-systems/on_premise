@@ -37,6 +37,7 @@ services:
         - rabbitlog:/var/log/rabbitmq
     ports:
       - 5672:5672
+      - 15672:15672
     healthcheck:
       test: "rabbitmqctl status | grep 'port: 5672' || exit 1"
       interval: 5s
@@ -59,8 +60,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
+    network_mode: host
     volumes:
       - ./Grafana/datasource_prometheus.yml:/etc/grafana/provisioning/datasources/datasource.yml
       - ./Grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/all.yaml
@@ -71,6 +71,7 @@ services:
 
   prometheus:
     image: 'prom/prometheus'
+    network_mode: host
     volumes:
       - ./Prometheus/scrape_configs.yml:/etc/prometheus/prometheus.yml
       - prom_data:/prometheus
@@ -85,13 +86,13 @@ services:
     image: 'quay.io/prometheus/haproxy-exporter:latest'
     command:
       - '--haproxy.scrape-uri=http://haproxy:8404/stats;csv'
-    ports:
-      - '9101:9101'
+    network_mode: host
 
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
+    network_mode: host
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
